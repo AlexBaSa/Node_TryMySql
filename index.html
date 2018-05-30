@@ -1,0 +1,427 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+	<title>Try MySql</title>
+	<meta name="generator" content="editplus" />
+	<meta name="author" content="" />
+	<meta charset="UTF-8" />
+	<!--link href="http://localhost:8080/site.css" rel="stylesheet"/>
+	<link href="site.css" rel="stylesheet" /-->
+	<link href="HeartCfg.ico" rel="icon">
+	<link href="http://localhost:8080/HeartCfg.ico" rel="icon">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	<style>
+	body {
+		font-family: "Tahoma, Verdana, Calibri";
+		font-size: 16px;
+		background-color: #ffffcc; 
+		color: #696969;
+		padding: 3px;
+	}
+
+	h2 {
+		font-family: "Tahoma, Verdana, Calibri";
+		border-bottom: 3px solid #cc9900;
+		color: #5e0e5e;
+		font-size: 24px;
+	}
+
+	table, th, td {
+		border: 1px solid green;
+		border-collapse: collapse;
+		padding: 5px;
+		font-family: "Tahoma, Verdana, Calibri";
+		color: rgb(16, 3, 71);
+	}
+
+	fieldset {
+		margin-left: 2%;
+		margin-right: 2%;
+	}
+</style>
+</head>
+
+ <body onload="OnBodyLoad()">
+ <h2>Try MySql..</h2>
+ <div>
+<fieldset>
+	<!--legend>DB Tables</legend-->
+	<table><tr>
+	<td>
+	New table:<input type="text" id="new_table">
+	<button onclick="OnBtnCreateTable()">Create...</button>
+	</td>
+	<td>
+	<select id="cust_view_tables" onclick="", onchange="OnTableSelectorChanged()"></select>
+	<button onclick="OnBtnDeleteTable()">Delete...</button>
+	<button onclick="OnBtnGetColsClick()">Get Columns</button>
+	</td>
+	<td>
+	<button onclick="OnBtnAllSelTableClick()">SELECT * ...</button>
+	WHERE:<input type="text" id="where_clause">
+	</td>	
+	</tr></table>
+</fieldset>
+ <fieldset>
+		<table><tr>
+			<td>
+				New values:<input type="text" id="insert_clause">
+				<button onclick="OnBtnInsert()">Insert...</button>
+			</td>
+		</tr></table>
+ <!--button onclick="OnBtnRomaClick()">Roma</button>
+ <button onclick="OnBtnLiverpoolClick()">Liverpool</button-->
+ </fieldset>
+</div>
+<fieldset>
+		Rows to view, in range <input type="number" value="0" min="0" max="3000" id="row_beg">
+		to <input type="number" value="20" min="0" max="3000" id="row_end">
+	 <!--button onclick="OnBtnAllClick()">OC Data</button-->
+</fieldset>
+<div>
+	<p id="raw_res"></p>
+	<table id="tabres"><tr>
+    </tr></table></div>
+ <div>
+
+  
+ </body>
+</html>
+
+<script type="text/javascript">
+var asTables=[], asColumns=[];//["customers", "oc_data"]
+function OnBodyLoad()
+{
+	var i=0, sText="", sClause="";
+
+	/*
+	sText = "";
+	for(i=0; i<asTables.length; i++)
+	{
+		sText += "<option value='"+i.toString()+"'>"+asTables[i]+"</option>";
+	}
+	$("#cust_view_tables").html(sText);
+	*/
+	$("#where_clause").text("");
+	sClause="SHOW TABLES;"
+	$("#raw_res").text(sClause);
+	$.ajax({
+		method:'POST'
+		//, url:sUrl+'?sql='+sClause
+		, url:'?sql='+sClause
+		, dataType:'json'
+		, error:function(resp){ShowTablesCB(sClause,resp);}
+		, success:function(resp){ShowTablesCB(sClause,resp);}
+		});
+}
+
+function ShowTablesCB(query,response)
+{
+	var sText="Query: <br>"+query+"<br>";
+	var i;//, asTables=[];
+
+	if(200==response.status)
+	{
+		var sJsonResp = response.responseText;
+		var sText = sJsonResp.slice(sJsonResp.indexOf(": [{")+2);
+		var obj = JSON.parse(sText);
+		var i, nTables=obj.length;
+
+		for(i=0; i<nTables; i++)
+		{
+			asTables.push(obj[i].Tables_in_lesson1_db);
+		}
+
+		sText = "";
+		for(i=0; i<nTables; i++)
+		{
+			sText += "("+asTables[i]+") ";
+		}
+		$("#raw_res").html(sText);
+
+		sText = "";
+		$("#cust_view_tables").html(sText);
+		for(i=0; i<asTables.length; i++)
+		{
+			sText += "<option value='"+i.toString()+"'>"+asTables[i]+"</option>";
+		}
+		$("#cust_view_tables").html(sText);
+
+		$("#raw_res").show();
+		return;
+	}
+	//
+	sText += "Error "+response.status+": <br>"+response.responseText+"<br>";
+	sText += response.statusText;
+	$("#raw_res").html(sText);
+	$("#raw_res").show();
+}
+
+function OnBtnInsert()
+{
+	var sUrl="http://localhost:8080/Node_TryMySql.js";
+	var sClause, sValues = $("#insert_clause").val();
+	//var i = $("#cust_view_tables").index();
+	//var sTable = asTables[i-1];
+	var i = document.getElementById("cust_view_tables").selectedIndex;
+	var sTable = asTables[i];
+
+	sClause = "INSERT INTO `"+sTable+"` VALUES "+sValues+";";
+	$("#raw_res").text(sClause);
+	$.ajax({
+		method:'POST'
+		//, url:sUrl+'?sql='+sClause
+		, url:'?sql='+sClause
+		, dataType:'json'
+		, error:function(resp){InsertCB(sClause,resp);}
+		, success:function(resp){InsertCB(sClause,resp);}
+		});
+}
+
+function OnBtnCreateTable()
+{
+	var sClause, sTable = $("#new_table").val();
+
+	sClause = "CREATE TABLE "+sTable+";";
+	$("#raw_res").text(sClause);
+	$.ajax({
+		method:'POST'
+		//, url:sUrl+'?sql='+sClause
+		, url:'?sql='+sClause
+		, dataType:'json'
+		, error:function(resp){InsertCB(sClause,resp);}
+		, success:function(resp){InsertCB(sClause,resp);}
+		});
+}
+
+function OnBtnDeleteTable()
+{
+	
+}
+
+function InsertCB(query,response)
+{
+	var sText="Query: <br>"+query+"<br>";
+
+	if(200==response.status)
+	{
+		return;
+	}
+	//
+	sText += "Error "+response.status+": <br>"+response.responseText+"<br>";
+	sText += response.statusText;
+	$("#raw_res").html(sText);
+	$("#raw_res").show();
+}
+
+function OnTableSelectorChanged()
+{
+	OnBtnGetColsClick();
+}
+
+function OnBtnGetColsClick()
+{
+	var i = document.getElementById("cust_view_tables").selectedIndex;
+	var sTable = asTables[i];
+	var sQl="SHOW COLUMNS FROM "+sTable;
+
+	$("#tabres").hide();
+	$("#where_clause").val("");
+	$("#raw_res").text("Wait..");
+	$.ajax({
+	method:'POST'
+	, url:'?sql='+sQl
+	, error:function(resp){ShowColumns(sQl,resp);}
+	, success:function(resp){ShowColumns(sQl,resp);}
+	, dataType:'json'
+	});
+}
+
+function OnBtnRomaClick()
+{
+	DoQuery("SELECT * FROM "+asTables[0]+" WHERE (address='Roma')");
+}
+
+function OnBtnLiverpoolClick()
+{
+	DoQuery("SELECT * FROM "+asTables[0]+" WHERE (address='Liverpool')");
+}
+
+function OnBtnAllSelTableClick()
+{
+	var sWhere = $("#where_clause").val();
+	var i = document.getElementById("cust_view_tables").selectedIndex;
+	var sTable = asTables[i];
+	var sQuery="";
+
+	if(sWhere.length>0)
+	{
+		sQuery = "SELECT * FROM "+sTable+" WHERE "+sWhere;
+	}
+	else
+	{
+		sQuery = "SELECT * FROM "+sTable;
+	}
+	//DoQuery("SELECT * FROM customers WHERE (<condition>");
+	$("#tabres").hide();
+	DoQuery(sQuery);
+}
+
+function OnBtnAllClick()
+{
+	DoQuery("SELECT * FROM "+asTables[1]);
+}
+
+function DoQuery(sQuery)
+{
+	//var sUrl="http://localhost:8080/Node_TryMySql.js";
+	//var sUrl="http://localhost:8080/index.html", sText="";
+	var sQl=sQuery;
+
+	$("#raw_res").text("Wait..");
+	$.ajax({
+	method:'POST'
+	//, url:sUrl+'?sql='+sQl
+	, url:'?sql='+sQl
+	, error:function(resp){ShowError(sQl,resp);}
+	, success:function(resp){ShowDataInTable(sQl,resp);}
+	, dataType:'json'
+	});
+}
+
+function ShowColumns(query, response)
+{
+	var sText="Query: <br>"+query+"<br>";
+	var i;
+
+	if(200==response.status)
+	{
+		var sJsonResp = response.responseText;
+		var sText = sJsonResp.slice(sJsonResp.indexOf(": [{")+2);
+		var obj = JSON.parse(sText);
+		var i, nCols=obj.length;
+
+		while(asColumns.length>0)
+		{
+			asColumns.pop();
+		}
+
+		for(i=0; i<nCols; i++)
+		{
+			asColumns.push(obj[i].Field);
+		}
+
+		sText = "";
+		for(i=0; i<nCols; i++)
+		{
+			sText += "("+asColumns[i]+") ";
+		}
+
+		$("#raw_res").html(sText);
+		$("#raw_res").show();
+		return;
+	}
+	//
+	sText += "Error "+response.status+": <br>"+response.responseText+"<br>";
+	sText += response.statusText;
+	$("#raw_res").html(sText);
+	$("#raw_res").show();
+}
+
+function ShowError(query, response)
+{
+	var i = document.getElementById("cust_view_tables").selectedIndex;
+	var sTable = asTables[i];
+	var sText="Query: <br>"+query+"<br>";
+	//
+	if(200==response.status)
+	{
+		BuildTable(sTable, response.responseText);
+		return;
+	}
+	//
+	sText += "Error "+response.status+": <br>"+JSON.stringify(response.responseText)+"<br>";
+	sText += response.statusText;
+	$("#raw_res").html(sText);
+	$("#raw_res").show();
+}
+
+function BuildTable(sTable, sJsonResp)
+{
+	var nRowBeg=0, nRowEnd=0; 
+	nRowBeg = 1*$("#row_beg").val();
+	nRowEnd = 1*$("#row_end").val();
+	//
+	if(sTable=="customers")
+	{
+		asColumns = ["name", "address"];
+	}
+	else if(sTable=="oc_data")
+	{
+		asColumns = ["Work time, h", "Flow, lpm", "Oxigen, perc."];
+	}
+	//
+	var nColumns=asColumns.length;
+	var sText=sJsonResp.slice(sJsonResp.indexOf(": [{")+2);
+	$("#raw_res").html(sText);
+	$("#raw_res").show();
+
+	var obj = JSON.parse(sText);
+	var i, j, nRows = obj.length;
+	//
+	if(0==nRows)
+	{
+		$("#raw_res").html("NO DATA COLLECTED!");
+		return;
+	}
+
+	if(nRows>1)
+	{
+		$("#raw_res").hide();
+	}
+
+	sText += "<br>"+nRows+" rows";
+	$("#raw_res").html(sText);
+
+	sText = "<tr>";
+	for(j=0; j<nColumns; j++)
+	{
+		sText += "<td>"+asColumns[j]+"</td>";
+	}
+	sText += "</tr>";
+
+	var asTabColor = ["#ffffff", "#ddeeff"];
+	for(i=0; i<nRows; i++)
+	{
+		if(i<nRowBeg)
+		{
+			continue;
+		}
+		if((nRowBeg<nRowEnd)&&(i>1*nRowEnd))
+		{
+			break;
+		}
+
+        j = i&0x1;
+        sText += "<tr style='background-color: "+asTabColor[j]+"'>";
+		for(j=0; j<nColumns; j++)
+		{
+			sText += "<td>"+obj[i][asColumns[j]]+"</td>";
+		}
+		sText += "</tr>";
+		
+	}
+
+	$("#tabres").html(sText);
+	$("#tabres").show();
+}
+
+function ShowDataInTable(query, response)
+{
+	var sResp = JSON.stringify(response.responseText);
+	$("#raw_res").html(sResp);
+	$("#raw_res").show();
+}
+
+</script>

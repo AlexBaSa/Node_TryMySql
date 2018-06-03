@@ -12,9 +12,9 @@
     "test": "node test.js"
   },
   "dependencies": {
-	"mysql": "^2.15.0",
-	"http": "",
-	"fs": "^0.0.1-security"
+    "mysql": "^2.15.0",
+    "http": "",
+    "fs": "^0.0.1-security"
   },
   "devDependencies": {
     "request": "^2.81.0",

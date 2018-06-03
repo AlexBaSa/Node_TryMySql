@@ -1,2 +1,2 @@
-web: node Node_TryMySql.js ListenPort=80
+web: node index.js
 test: node test.js

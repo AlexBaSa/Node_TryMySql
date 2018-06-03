@@ -1,9 +1,9 @@
 {
-  "name": "Node_TryMySql.js",
+  "name": "Node_TryMySql",
   "version": "0.3.0",
   "description": "A Node.js+MySql server app",
   "engines": {
-    "node": "8.9.1"
+    "node": "^8.11.1"
   },
   "main": "Node_TryMySql.js",
   "scripts": {
